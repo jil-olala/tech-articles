@@ -6,7 +6,7 @@
 - **原文链接：** https://mp.weixin.qq.com/s/gaBKZFIZetj9H9eqyhT13g
 
 
-![image](https://mmbiz.qpic.cn/mmbiz_jpg/j7RlD5l5q1wBibNVq6Uu7QdKick7o40odj8hiaP95DMgBPykjJT9cLsSb1uw8QsWvCibCnxxrhXxOeMJWtJ65Sxibib2FibWhVIJMmHGd7oXZCWoPo/640?wx_fmt=jpeg&from=appmsg)
+![image](images/claude-code-tutorial/img-01.jpg)
 ## 阿里妹导读
 文章内容基于作者个人技术实践与独立思考，旨在分享经验，仅代表个人观点。
 ## 一、背景
@@ -19,12 +19,12 @@
 3. 多用户场景下的隔离问题——Claude Code 是一个单实例、记忆与配置长期文件化的系统，云上部署后不同用户的提问、记忆、配置可能相互串扰，如何解决？
 ### 实现效果
 1. 云端部署且隔离好（沙箱）claude code
-![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1xE7PicaoFxicOzHqOffFND402794YJAK9cicZES8qp3ib2nELX3man1FhbPMicqtIKLcibOeiaK8V6qcibtfI6lG0mNZ6q9c34YPKWX5A/640?wx_fmt=png&from=appmsg)
+![image](images/claude-code-tutorial/img-02.png)
 2. 提供出http接口可远程调用云上的claude code实例
-![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1yzYHarobLHJhG2ZoOBdEUT4Ejf6Ffpsl85QLxzOXanHwiaxFxr8AMyRt0o2AAEeHsGXnpMBp6enYExJDIPDNzib0rSsB66AW0gk/640?wx_fmt=png&from=appmsg)
+![image](images/claude-code-tutorial/img-03.png)
 3. 同时可查看魔改后的claude code提供出的所有远程http接口：quer、session、hook、多agent等等配置也都支持
-![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1zbFk5MWcE8tdwtm2RicAcDjvaACs9KzZhicR2s13OwhrydvTFZ7Ndicrzdriaw1vsfrYGHNuzt7p7RaV2dZ58NLsvGEbbPkicCBkib0/640?wx_fmt=png&from=appmsg)
-![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1wVBjyiciaqCf6g4smzfqK76kWO2RtPXjxv61DRLHMHBj8dO9RZN3UAial2qLzj0MoBuOcSrrcVnyZeUuMKbFLETiawzkmWBzQQhg4/640?wx_fmt=png&from=appmsg)
+![image](images/claude-code-tutorial/img-04.png)
+![image](images/claude-code-tutorial/img-05.png)
 ## 二、整体方案思路
 针对上述三个问题，我们设计的整体方案如下图所示：
 ```
@@ -365,12 +365,12 @@ sleep 365d
 构建完成后，沙箱实例启动即可通过 http://<sandbox-ip>:8765/docs 访问完整的 API 文档。
 如下图所示：
 1. 拉起一个沙箱，获取沙箱域名
-![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1xyIPLY4N1EEXdHtG5pzA3cTaEj1nLIQrPlYDK3WEsOaAWrcRwdFS3aMTzxsYiaEfUoib5oA0r6vCRh48IqNe1WjkwCSXMBQPJvY/640?wx_fmt=png&from=appmsg)
+![image](images/claude-code-tutorial/img-06.png)
 2. 调用该FastApi服务，底层调用沙箱中的claude code进行获取流式响应：
-![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1zgSC3TCBKzTl5sEujrntefIycRuAicic2r4vO68p4laorBTsPib0vrGSvuLWx0HMkOl4TIXghP59qL2dibO1ZYUdmbuniaPe8eZibfk/640?wx_fmt=png&from=appmsg)
+![image](images/claude-code-tutorial/img-07.png)
 3. 该http服务的所有接口示例也能获取到
-![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1waoyia37mOq1lWuW9nzYt226bG8Erkd10ytTiaNccQPUXYw0nMzJ3mwrRktyxoPsa8n5xtbLQs5bNIFa4qc5KZUtxWIibjt2UGpM/640?wx_fmt=png&from=appmsg)
-![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1wqZmGRbwHpWMFvRlibfETb1j9t5pbvvw3O8yU8oeaEHMAWFWLNDkDGbzBXmr7F5q7tFo88iaxCyLuM0ROwcrTebkJibuCzPO1Hmc/640?wx_fmt=png&from=appmsg)
+![image](images/claude-code-tutorial/img-08.png)
+![image](images/claude-code-tutorial/img-09.png)
 ## 六、沙箱方式实现 Claude Code 的
 HTTP 远程调用及多用户实例隔离
 这是整套方案中最关键的设计——如何在云上实现多用户隔离。
@@ -591,10 +591,10 @@ Ai的合理利用真的对研发提效很大，这个项目，从 claude code部
 但：个人的工程设计能力 始终是借助ai高效产出的基础，合理的设计思路才能快速引导Ai构建高质量系统
 借助ai做的一些具体事情如下：
 ai分析离线部署方案：
-![image](https://mmbiz.qpic.cn/mmbiz_jpg/j7RlD5l5q1wicfJ2t64KG5a8abDFJ9EHbrY3hzia5lGrg5eR9Dib47duqR7khPicrv9FJayZL1mlT753XPgsx0lUjcJylib7wh6atgvGdeJtHxiaw/640?wx_fmt=jpeg)
+![image](images/claude-code-tutorial/img-10.jpg)
 基础镜像构建：
-![image](https://mmbiz.qpic.cn/sz_mmbiz/j7RlD5l5q1wgzqicO6OJ8CpFW22g0gic2vaCDYzcOHoiboyHfbicZNKaS23W77ibiaV8LCKkB2twMF2FhhuqcniagmroLVt1l9WxDb342Tq6Y7ojNM/640?wx_fmt=other&from=appmsg)
+![image](images/claude-code-tutorial/img-11.jpg)
 FastApi重构claude code
 ata撰写
-![image](https://mmbiz.qpic.cn/sz_mmbiz/j7RlD5l5q1zKS3NMia2HN8VYs2Lp9z0UB3qHcvsMqKngZgltuFfb8UicvgJeNIZXEExWJ9Zglnq03ZpV9UkD54CuVwPEEAzibCqwepE0wEfscQ/640?wx_fmt=other&from=appmsg)
+![image](images/claude-code-tutorial/img-12.jpg)
 [1]https://code.alibaba-inc.com/alsc-info-ilink-agent/Claude-code-http-service
