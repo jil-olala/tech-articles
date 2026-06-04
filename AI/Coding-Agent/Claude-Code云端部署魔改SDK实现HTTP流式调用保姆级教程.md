@@ -7,25 +7,25 @@
 
 
 ![image](https://mmbiz.qpic.cn/mmbiz_jpg/j7RlD5l5q1wBibNVq6Uu7QdKick7o40odj8hiaP95DMgBPykjJT9cLsSb1uw8QsWvCibCnxxrhXxOeMJWtJ65Sxibib2FibWhVIJMmHGd7oXZCWoPo/640?wx_fmt=jpeg&from=appmsg)
-阿里妹导读
+## 阿里妹导读
 文章内容基于作者个人技术实践与独立思考，旨在分享经验，仅代表个人观点。
-一、背景
+## 一、背景
 在 OpenClaw、Claude Code 等产品出现之前，开发同学实现一个 Agent 的基本思路是：基于 LLM 实现一个 Loop 调用，配合 MCP 或代码层面自定义的工具来完成 ReactAgent；或者利用 Spring AI、LangGraph 等框架，配置工具、设计提示词，就可以实现一个能完成基本检索类任务的助理。我们之前也是这么做的，甚至将 Loop 处理逻辑和上下文处理做成了通用性调用——对这个 Loop 赋予不同的提示词和工具，就能产出不同的垂域助理。
 但随着 Harness Engineering 概念的提出，对一个稳定好用的 Agent 的设计要求明显变高了。如果是自行开发的 ReactAgent 架构，还需要补充更多的约束层工具、任务完成的 Evaluation 机制、上下文切换到干净的子 Agent 等设计。而利用 Spring AI、LangGraph 等框架则更难去适配最新的 Agent 设计理念。
 因此，当下最快实现一个 Harness Engineering 工程的路径是：部署现有的产品 → 提供调用能力 → 在应用层和端上做封装及扩展。
 本文将围绕以 Claude Code 作为通用助理底层能力的实践过程，就以下几个核心问题展开：
-1.如何将一个本地化的闭源产品部署到云端——且由于网络限制，有些服务器或沙箱中并不支持 brew install 等在线安装方式。
-2.云端部署后以什么方式对外提供服务——CLI 方式显然不可取：一是非流式的，用户等待时间较长；二是 Claude Code 的 CLI 命令产出的是终端图形化界面，并非可供程序消费的结构化结果。
-3.多用户场景下的隔离问题——Claude Code 是一个单实例、记忆与配置长期文件化的系统，云上部署后不同用户的提问、记忆、配置可能相互串扰，如何解决？
-实现效果
-1.云端部署且隔离好（沙箱）claude code
+1. 如何将一个本地化的闭源产品部署到云端——且由于网络限制，有些服务器或沙箱中并不支持 brew install 等在线安装方式。
+2. 云端部署后以什么方式对外提供服务——CLI 方式显然不可取：一是非流式的，用户等待时间较长；二是 Claude Code 的 CLI 命令产出的是终端图形化界面，并非可供程序消费的结构化结果。
+3. 多用户场景下的隔离问题——Claude Code 是一个单实例、记忆与配置长期文件化的系统，云上部署后不同用户的提问、记忆、配置可能相互串扰，如何解决？
+### 实现效果
+1. 云端部署且隔离好（沙箱）claude code
 ![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1xE7PicaoFxicOzHqOffFND402794YJAK9cicZES8qp3ib2nELX3man1FhbPMicqtIKLcibOeiaK8V6qcibtfI6lG0mNZ6q9c34YPKWX5A/640?wx_fmt=png&from=appmsg)
-2.提供出http接口可远程调用云上的claude code实例
+2. 提供出http接口可远程调用云上的claude code实例
 ![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1yzYHarobLHJhG2ZoOBdEUT4Ejf6Ffpsl85QLxzOXanHwiaxFxr8AMyRt0o2AAEeHsGXnpMBp6enYExJDIPDNzib0rSsB66AW0gk/640?wx_fmt=png&from=appmsg)
-3.同时可查看魔改后的claude code提供出的所有远程http接口：quer、session、hook、多agent等等配置也都支持
+3. 同时可查看魔改后的claude code提供出的所有远程http接口：quer、session、hook、多agent等等配置也都支持
 ![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1zbFk5MWcE8tdwtm2RicAcDjvaACs9KzZhicR2s13OwhrydvTFZ7Ndicrzdriaw1vsfrYGHNuzt7p7RaV2dZ58NLsvGEbbPkicCBkib0/640?wx_fmt=png&from=appmsg)
 ![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1wVBjyiciaqCf6g4smzfqK76kWO2RtPXjxv61DRLHMHBj8dO9RZN3UAial2qLzj0MoBuOcSrrcVnyZeUuMKbFLETiawzkmWBzQQhg4/640?wx_fmt=png&from=appmsg)
-二、整体方案思路
+## 二、整体方案思路
 针对上述三个问题，我们设计的整体方案如下图所示：
 ```
 ┌───────────────────────────────────────────────────────────────────┐
@@ -60,7 +60,7 @@
 第二层：HTTP 流式服务化。 我们基于 Claude Code 官方的 Python SDK（claude-agent-sdk）+ FastAPI + SSE，将 SDK 的 query() 和 ClaudeSDKClient 两种调用模式封装为 RESTful HTTP 接口，实现实时流式输出，替代不可用的 CLI 方式。
 第三层：基础镜像构建。 将 Node.js 运行时、Claude Code CLI、Python 环境、HTTP 服务代码打包为一个 Docker 基础镜像，做到一次构建、处处部署。
 第四层：沙箱多实例隔离。 通过沙箱平台的容器调度能力，为每个用户分配独立的沙箱实例。每个沙箱内部运行一套独立的 Claude Code + HTTP Service，天然实现记忆、配置、文件系统的完全隔离。且由于每个用户的配置其实都是各类文件，可以将用户的所有文件进行版本化存储，新启实例时，加载这个用户的所有文件，销毁实例时，保存这个用户此时的文件版本
-三、claude code云端部署（离线方案）
+## 三、Claude Code 云端部署（离线方案）
 Claude Code CLI 是一个基于 Node.js 的命令行工具，通过 npm 发布。在无外网的云端服务器上安装，核心要解决两个问题：Node.js 运行环境 和 Claude Code 包本身。
 **3.1 环境要求**
 首先确认目标服务器的环境：
@@ -97,15 +97,15 @@ claude --version
 ```
 **3.4 注意事项**
 有几点需要特别注意。首先是 CPU 架构匹配，本地下载的 Node.js 二进制包必须与服务器架构一致（x64 / arm64），可以通过 uname -m 确认。其次，npm pack 只会打包主包本身不含依赖，如果安装时报缺依赖，需要改用整目录打包方案。最后，Claude Code 运行时仍然需要网络访问 Anthropic API，如果服务器完全无外网，需要配置内网 API 代理（例如通过设置 ANTHROPIC_BASE_URL 指向内部代理地址）。
-四、基于FastApi重写claude-agent-sdk
+## 四、基于 FastAPI 重写 claude-agent-sdk
 这是整个方案中最核心的一层。Claude Code 支持两种调用模式：query() 单次查询和 ClaudeSDKClient 多轮会话。我们基于 FastAPI + SSE（Server-Sent Events）将这两种模式封装为 HTTP 接口，实现了从 CLI 到 HTTP 的完整转换。且该http服务还支持在query中传入harness工程所需的各类工具、插件、skills、hook等
 实现的该http调用claude code的代码仓库[1]
 **4.1 技术选型**
 整个 HTTP 服务基于以下技术栈构建：
-●FastAPI：异步 Web 框架，天然支持 async/await，与 SDK 的异步迭代器完美配合。
-●sse-starlette：SSE 协议实现库，将异步生成器直接转换为标准 SSE 事件流。
-●claude-agent-sdk：Claude Code 官方 Python SDK，提供 query() 和 ClaudeSDKClient 两种调用方式。
-●Pydantic：请求/响应模型定义与校验。
+- FastAPI：异步 Web 框架，天然支持 async/await，与 SDK 的异步迭代器完美配合。
+- sse-starlette：SSE 协议实现库，将异步生成器直接转换为标准 SSE 事件流。
+- claude-agent-sdk：Claude Code 官方 Python SDK，提供 query() 和 ClaudeSDKClient 两种调用方式。
+- Pydantic：请求/响应模型定义与校验。
 依赖配置（requirements.txt）：
 ```
 fastapi>=0.110.0
@@ -288,46 +288,38 @@ class StreamingSession:
 }
 ```
 MCP 服务器集成： 支持连接外部 MCP 服务器（stdio/http/sse），将第三方工具能力接入 Claude：
-```
+```json
 {
-  "prompt": "审查并优化代码",
-  "agents": {
-    "code-reviewer": {
-      "description": "代码审查专家",
-      "prompt": "关注安全性和最佳实践",
-      "tools": [
-        "Read",
-        "Glob",
-        "Grep"
-      ]
+  "prompt": "列出最近的 GitHub issues",
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {"GITHUB_TOKEN": "ghp_xxx"}
     }
   }
 }
 ```
 钩子（Hooks）： 支持 PreToolUse / PostToolUse 等生命周期钩子，可实现工具调用审计、敏感操作拦截等：
-```
+```json
 {
-  "prompt": "审查并优化代码",
-  "agents": {
-    "code-reviewer": {
-      "description": "代码审查专家",
-      "prompt": "关注安全性和最佳实践",
-      "tools": [
-        "Read",
-        "Glob",
-        "Grep"
-      ]
-    }
+  "hooks": {
+    "PreToolUse": [
+      {"matcher": "Write|Edit", "action": "deny", "reason": "禁止写入 .env 文件"}
+    ],
+    "PostToolUse": [
+      {"action": "webhook", "webhook_url": "https://audit.example.com/log"}
+    ]
   }
 }
 ```
 **4.6 踩坑记录**
 在实际开发过程中，遇到了几个值得记录的问题：
-1.SDK 版本问题。 Claude Code 的文档中引用的 claude-agent-sdk>=0.2.111 在 PyPI 上并不存在（截至实践时最高版本为 0.1.66）。需将依赖约束改为 >=0.1.60 才能正常安装。
-2.权限拦截问题。 SDK 默认的权限模式会在 Claude 尝试读取 ~/.claude/CLAUDE.md 等文件时触发安全确认，导致无人值守场景下卡死。解决方案是在 _build_options() 中将未指定权限模式的请求默认设置为 bypassPermissions。
-3.闭包变量绑定问题。 在 _build_hooks() 中动态生成钩子函数时，循环变量 event_name 在闭包内是延迟绑定的，导致所有钩子共享了最后一次循环的值。通过将循环变量作为默认参数捕获（_event_name=event_name）来修复。
-4.异步阻塞问题。 SDK 的部分 session 管理函数（list_sessions、get_session_info 等）是同步阻塞调用。在 FastAPI 的异步上下文中直接调用会阻塞事件循环。通过 asyncio.to_thread() 包装解决。
-五、构建基础镜像
+1. SDK 版本问题。 Claude Code 的文档中引用的 claude-agent-sdk>=0.2.111 在 PyPI 上并不存在（截至实践时最高版本为 0.1.66）。需将依赖约束改为 >=0.1.60 才能正常安装。
+2. 权限拦截问题。 SDK 默认的权限模式会在 Claude 尝试读取 ~/.claude/CLAUDE.md 等文件时触发安全确认，导致无人值守场景下卡死。解决方案是在 _build_options() 中将未指定权限模式的请求默认设置为 bypassPermissions。
+3. 闭包变量绑定问题。 在 _build_hooks() 中动态生成钩子函数时，循环变量 event_name 在闭包内是延迟绑定的，导致所有钩子共享了最后一次循环的值。通过将循环变量作为默认参数捕获（_event_name=event_name）来修复。
+4. 异步阻塞问题。 SDK 的部分 session 管理函数（list_sessions、get_session_info 等）是同步阻塞调用。在 FastAPI 的异步上下文中直接调用会阻塞事件循环。通过 asyncio.to_thread() 包装解决。
+## 五、构建基础镜像
 基础镜像的目标是将运行环境、Claude Code CLI、HTTP 服务代码一次性打包，做到沙箱实例开箱即用。以下是 Dockerfile 的核心模块解析：
 ```
 # ============================================================
@@ -372,28 +364,28 @@ sleep 365d
 ```
 构建完成后，沙箱实例启动即可通过 http://<sandbox-ip>:8765/docs 访问完整的 API 文档。
 如下图所示：
-1.拉起一个沙箱，获取沙箱域名
+1. 拉起一个沙箱，获取沙箱域名
 ![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1xyIPLY4N1EEXdHtG5pzA3cTaEj1nLIQrPlYDK3WEsOaAWrcRwdFS3aMTzxsYiaEfUoib5oA0r6vCRh48IqNe1WjkwCSXMBQPJvY/640?wx_fmt=png&from=appmsg)
-2.调用该FastApi服务，底层调用沙箱中的claude code进行获取流式响应：
+2. 调用该FastApi服务，底层调用沙箱中的claude code进行获取流式响应：
 ![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1zgSC3TCBKzTl5sEujrntefIycRuAicic2r4vO68p4laorBTsPib0vrGSvuLWx0HMkOl4TIXghP59qL2dibO1ZYUdmbuniaPe8eZibfk/640?wx_fmt=png&from=appmsg)
-3.该http服务的所有接口示例也能获取到
+3. 该http服务的所有接口示例也能获取到
 ![image](https://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1waoyia37mOq1lWuW9nzYt226bG8Erkd10ytTiaNccQPUXYw0nMzJ3mwrRktyxoPsa8n5xtbLQs5bNIFa4qc5KZUtxWIibjt2UGpM/640?wx_fmt=png&from=appmsg)
 ![image](https://mmbiz.qpic.cn/sz_mmbiz_png/j7RlD5l5q1wqZmGRbwHpWMFvRlibfETb1j9t5pbvvw3O8yU8oeaEHMAWFWLNDkDGbzBXmr7F5q7tFo88iaxCyLuM0ROwcrTebkJibuCzPO1Hmc/640?wx_fmt=png&from=appmsg)
-六、沙箱方式实现claude code的
+## 六、沙箱方式实现 Claude Code 的
 HTTP 远程调用及多用户实例隔离
 这是整套方案中最关键的设计——如何在云上实现多用户隔离。
 **6.1 问题本质**
 Claude Code 在设计上是一个单用户、本地化的系统。它的记忆（~/.claude/ 目录）、项目上下文（CLAUDE.md）、会话历史、MCP 配置等全部以文件形式存储在本地磁盘。这意味着如果多个用户共享同一个 Claude Code 实例，会出现以下问题：
-●记忆串扰：用户 A 的对话历史被用户 B 看到或影响。
-●配置冲突：不同用户的 system prompt、permission mode 互相覆盖。
-●文件系统污染：Claude Code 在工作目录中产生的文件对所有用户可见。
-●会话状态冲突：SDK 的内存中会话注册表（_sessions dict）是进程级的，多用户并发会导致会话 ID 碰撞。
-**6.2 核心思路：一用户一沙箱 +
-用户文件版本化存储**
-##### 我们的隔离方案分为两层设计：
-##### 第一层是容器级隔离——利用沙箱平台的容器调度能力，为每个用户分配独立的沙箱实例。每个沙箱内运行一套完整的 Claude Code CLI + HTTP Service，天然实现运行时的全方位隔离。
-##### 第二层是用户状态持久化——这是方案的关键创新点。我们观察到，Claude Code 的所有用户态数据本质上都是文件：~/.claude/ 下的记忆文件、项目目录中的 CLAUDE.md、会话历史索引、MCP 配置、工作目录中产生的代码文件等。既然一切皆文件，我们就可以将用户的全部文件进行版本化存储——沙箱实例变成纯粹的无状态计算节点，用户状态完全外置到持久化存储层。
-##### 具体来说：新启一个沙箱实例时，从存储层加载该用户最新版本的文件快照；沙箱销毁或回收时，将此刻的文件变更回写并生成新的版本。这样沙箱实例可以随时创建、随时销毁，用户的记忆和上下文永远不会丢失。
+- 记忆串扰：用户 A 的对话历史被用户 B 看到或影响。
+- 配置冲突：不同用户的 system prompt、permission mode 互相覆盖。
+- 文件系统污染：Claude Code 在工作目录中产生的文件对所有用户可见。
+- 会话状态冲突：SDK 的内存中会话注册表（_sessions dict）是进程级的，多用户并发会导致会话 ID 碰撞。
+**6.2 核心思路：一用户一沙箱 + 用户文件版本化存储**
+
+我们的隔离方案分为两层设计：
+第一层是容器级隔离——利用沙箱平台的容器调度能力，为每个用户分配独立的沙箱实例。每个沙箱内运行一套完整的 Claude Code CLI + HTTP Service，天然实现运行时的全方位隔离。
+第二层是用户状态持久化——这是方案的关键创新点。我们观察到，Claude Code 的所有用户态数据本质上都是文件：~/.claude/ 下的记忆文件、项目目录中的 CLAUDE.md、会话历史索引、MCP 配置、工作目录中产生的代码文件等。既然一切皆文件，我们就可以将用户的全部文件进行版本化存储——沙箱实例变成纯粹的无状态计算节点，用户状态完全外置到持久化存储层。
+具体来说：新启一个沙箱实例时，从存储层加载该用户最新版本的文件快照；沙箱销毁或回收时，将此刻的文件变更回写并生成新的版本。这样沙箱实例可以随时创建、随时销毁，用户的记忆和上下文永远不会丢失。
 **6.3 整体架构**
 ```
 ┌──────────────────────────────────────────────────────────────────┐
@@ -588,13 +580,13 @@ async def query_claude(user_id: str, prompt: str) -> AsyncIterator[dict]:
 状态永不丢失。 用户的一切工作成果——Claude 积累的记忆、写过的代码、会话历史、个性化配置——都以文件快照的形式持久化在对象存储中。沙箱实例可以随时销毁、随时重建，用户无感知。
 资源弹性伸缩。 沙箱实例不再与用户绑定，而是变成了可复用的无状态计算节点。活跃用户少时，少量实例即可服务；高峰期只需扩大沙箱池。闲置用户不占用任何计算资源，只占用廉价的对象存储空间。
 天然的版本回溯能力。 由于每次回收都生成新版本，用户的文件天然具备了时间线。如果 Claude 在某次操作中写坏了代码或误删了文件，可以回滚到任意历史版本恢复——这实际上为 Claude Code 的工作成果提供了一层"安全网"。
-七、总结
+## 七、总结
 本文介绍了一套将 Claude Code 从本地 CLI 工具转变为云端 HTTP 流式服务的完整方案。回顾开篇提出的三个核心问题：
 对于离线部署问题，我们通过 npm pack 打包 + Docker 基础镜像的方式，实现了无外网环境下的一键部署。
 对于服务化输出问题，我们基于 claude-agent-sdk + FastAPI + SSE 构建了完整的 HTTP 服务层，支持单次查询和多轮会话两种模式，以及 Hooks、Subagents、MCP、Permission 等全部高级特性，解决了 CLI 方式非流式、非结构化的根本缺陷。
 对于多用户隔离问题，我们采用"一用户一沙箱 + 用户文件版本化存储"的架构。容器级隔离解决了运行时串扰问题，文件版本化存储则让沙箱实例彻底无状态化——用户的记忆、配置、工作成果以快照形式持久化在对象存储中，沙箱可以随时创建和销毁而用户状态永不丢失。这套设计还附带了版本回溯能力，为 Claude Code 的自动化操作提供了一层额外的安全保障。
 整套方案的设计原则是尽量不改造 Claude Code 本身，而是在外围做封装和调度。这样做的好处是，当 Claude Code 升级时（例如 SDK 新增 API、CLI 功能增强），我们只需要更新基础镜像中的 tgz 包，HTTP 服务层和沙箱调度层基本不需要改动。
-八、个人感悟
+## 八、个人感悟
 Ai的合理利用真的对研发提效很大，这个项目，从 claude code部署调研->部署方案设计->重构sdk为FastApi项目->基础镜像构建->沙箱部署->本篇ata撰写仅仅耗时1.5人日及1909 Credits
 但：个人的工程设计能力 始终是借助ai高效产出的基础，合理的设计思路才能快速引导Ai构建高质量系统
 借助ai做的一些具体事情如下：
@@ -606,25 +598,3 @@ FastApi重构claude code
 ata撰写
 ![image](https://mmbiz.qpic.cn/sz_mmbiz/j7RlD5l5q1zKS3NMia2HN8VYs2Lp9z0UB3qHcvsMqKngZgltuFfb8UicvgJeNIZXEExWJ9Zglnq03ZpV9UkD54CuVwPEEAzibCqwepE0wEfscQ/640?wx_fmt=other&from=appmsg)
 [1]https://code.alibaba-inc.com/alsc-info-ilink-agent/Claude-code-http-service
-                        预览时标签不可点
-          微信扫一扫
-关注该公众号
-  继续滑动看下一个
-              轻触阅读原文
-![image](http://mmbiz.qpic.cn/mmbiz_png/j7RlD5l5q1zsMO0HEywEjicRXGH5MTLyLhxbAz1qQ3U4jPFnrdGQbFPOXKYT6A4D6R48bZNzIAHDcCNyLTRBO4bnd0UrLrEtD2lWB6gKr6EE/0?wx_fmt=png)
-                        阿里云开发者
-        向上滑动看下一个
-      知道了
-          微信扫一扫
-使用小程序
-          ****
-          取消
-          允许
-      ****
-      取消
-      允许
-      ****
-      取消
-      允许
-  ×
-  分析
