@@ -138,53 +138,53 @@ query() 是一个异步迭代器，每次 yield 出一条消息对象（SystemMe
 消息序列化层（agent_service.py，关键逻辑摘录）：
 ```
 def _serialize_message(message: Any) -> dict[str, Any]:
-"""将 SDK 消息对象转换为 JSON 可序列化的 SSE 事件字典"""
-if isinstance(message, SystemMessage):
-return {
-"event": "system",
-"data": {
-"subtype": getattr(message, "subtype", None),
-"session_id": getattr(message, "session_id", None)
-or (message.data.get("session_id") if hasattr(message, "data") else None),
-"details": message.data if hasattr(message, "data") else {},
-},
-}
-elif isinstance(message, AssistantMessage):
-blocks = []
-for block in message.content:
-if isinstance(block, TextBlock):
-blocks.append({"type": "text", "text": block.text})
-elif hasattr(block, "type") and block.type == "tool_use":
-blocks.append({
-"type": "tool_use",
-"name": block.name,
-"id": getattr(block, "id", None),
-"input": getattr(block, "input", {}),
-})
-else:
-blocks.append({"type": getattr(block, "type", "unknown"), "raw": str(block)})
-return {
-"event": "assistant",
-"data": {
-"content": blocks,
-"parent_tool_use_id": getattr(message, "parent_tool_use_id", None),
-},
-}
-elif isinstance(message, ResultMessage):
-return {
-"event": "result",
+    """将 SDK 消息对象转换为 JSON 可序列化的 SSE 事件字典"""
+    if isinstance(message, SystemMessage):
+        return {
+            "event": "system",
+            "data": {
+                "subtype": getattr(message, "subtype", None),
+                "session_id": getattr(message, "session_id", None)
+                    or (message.data.get("session_id") if hasattr(message, "data") else None),
+                "details": message.data if hasattr(message, "data") else {},
+            },
+        }
+    elif isinstance(message, AssistantMessage):
+        blocks = []
+        for block in message.content:
+            if isinstance(block, TextBlock):
+                blocks.append({"type": "text", "text": block.text})
+            elif hasattr(block, "type") and block.type == "tool_use":
+                blocks.append({
+                    "type": "tool_use",
+                    "name": block.name,
+                    "id": getattr(block, "id", None),
+                    "input": getattr(block, "input", {}),
+                })
+            else:
+                blocks.append({"type": getattr(block, "type", "unknown"), "raw": str(block)})
+        return {
+            "event": "assistant",
+            "data": {
+                "content": blocks,
+                "parent_tool_use_id": getattr(message, "parent_tool_use_id", None),
+            },
+        }
+    elif isinstance(message, ResultMessage):
+        return {
+            "event": "result",
 ```
 SSE 流式端点（query.py）：
 ```
 @router.post("/query/stream")
 async def query_stream(req: QueryRequest):
-async def event_generator():
-async for event in run_query_stream(req):
-yield {
-"event": event.get("event", "message"),
-"data": json.dumps(event.get("data", {}), ensure_ascii=False),
-}
-return EventSourceResponse(event_generator())
+    async def event_generator():
+        async for event in run_query_stream(req):
+            yield {
+                "event": event.get("event", "message"),
+                "data": json.dumps(event.get("data", {}), ensure_ascii=False),
+            }
+    return EventSourceResponse(event_generator())
 ```
 客户端收到的 SSE 事件流形如：
 ```
@@ -231,38 +231,41 @@ curl -X POST http://localhost:8765/v1/sessions/$SESSION/send \
 多轮会话在服务端的实现基于 StreamingSession 类，它内部维护一个消息队列和响应队列，通过后台异步循环驱动 ClaudeSDKClient。以下是核心设计的简化示意（完整实现还包含图片消息支持、关闭信号处理、异常恢复、心跳机制等）：
 ```
 class StreamingSession:
-def __init__(self, session_id: str, options: ClaudeAgentOptions):
-self.session_id = session_id
-self._client: Optional[ClaudeSDKClient] = None
-self._message_queue: asyncio.Queue = asyncio.Queue() # 用户消息入队
-self._response_queue: asyncio.Queue = asyncio.Queue() # Agent 响应出队
-self._running = False
-async def start(self):
-"""初始化 SDK Client 并启动后台处理循环"""
-self._client = ClaudeSDKClient(options=self.options)
-await self._client.__aenter__()
-self._running = True
-self._task = asyncio.create_task(self._process_loop())
-async def _process_loop(self):
-"""后台循环：从消息队列取用户输入 → 调用 SDK → 推送响应到响应队列"""
-while self._running:
-msg = await self._message_queue.get()
-if msg is None: # 关闭信号
-break
-await self._client.query(msg["message"])
-async for response in self._client.receive_response():
-await self._response_queue.put(_serialize_message(response))
-await self._response_queue.put(
-{"event": "turn_complete", "data": {"session_id": self.session_id}}
-)
-async def receive_events(self) -> AsyncGenerator[dict, None]:
-"""SSE 事件流输出，超时时发送心跳保活"""
-while self._running or not self._response_queue.empty():
-try:
-event = await asyncio.wait_for(self._response_queue.get(), timeout=120)
-yield event
-except asyncio.TimeoutError:
-yield {"event": "heartbeat", "data": {"session_id": self.session_id}}
+    def __init__(self, session_id: str, options: ClaudeAgentOptions):
+        self.session_id = session_id
+        self._client: Optional[ClaudeSDKClient] = None
+        self._message_queue: asyncio.Queue = asyncio.Queue()  # 用户消息入队
+        self._response_queue: asyncio.Queue = asyncio.Queue()  # Agent 响应出队
+        self._running = False
+
+    async def start(self):
+        """初始化 SDK Client 并启动后台处理循环"""
+        self._client = ClaudeSDKClient(options=self.options)
+        await self._client.__aenter__()
+        self._running = True
+        self._task = asyncio.create_task(self._process_loop())
+
+    async def _process_loop(self):
+        """后台循环：从消息队列取用户输入 → 调用 SDK → 推送响应到响应队列"""
+        while self._running:
+            msg = await self._message_queue.get()
+            if msg is None:  # 关闭信号
+                break
+            await self._client.query(msg["message"])
+            async for response in self._client.receive_response():
+                await self._response_queue.put(_serialize_message(response))
+            await self._response_queue.put(
+                {"event": "turn_complete", "data": {"session_id": self.session_id}}
+            )
+
+    async def receive_events(self) -> AsyncGenerator[dict, None]:
+        """SSE 事件流输出，超时时发送心跳保活"""
+        while self._running or not self._response_queue.empty():
+            try:
+                event = await asyncio.wait_for(self._response_queue.get(), timeout=120)
+                yield event
+            except asyncio.TimeoutError:
+                yield {"event": "heartbeat", "data": {"session_id": self.session_id}}
 ```
 **4.5 高级功能支持**
 除了基础的查询和会话功能，HTTP 服务还完整支持了 SDK 的所有高级特性：
@@ -270,40 +273,52 @@ yield {"event": "heartbeat", "data": {"session_id": self.session_id}}
 子代理（Subagents）： 支持通过 API 定义专用子代理，指定其工具集、模型和提示词，实现任务分解：
 ```
 {
-"prompt": "审查并优化代码",
-"agents": {
-"code-reviewer": {
-"description": "代码审查专家",
-"prompt": "关注安全性和最佳实践",
-"tools": ["Read", "Glob", "Grep"]
-}
-}
+  "prompt": "审查并优化代码",
+  "agents": {
+    "code-reviewer": {
+      "description": "代码审查专家",
+      "prompt": "关注安全性和最佳实践",
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep"
+      ]
+    }
+  }
 }
 ```
 MCP 服务器集成： 支持连接外部 MCP 服务器（stdio/http/sse），将第三方工具能力接入 Claude：
 ```
 {
-"prompt": "列出最近的 GitHub issues",
-"mcpServers": {
-"github": {
-"command": "npx",
-"args": ["-y", "@modelcontextprotocol/server-github"],
-"env": {"GITHUB_TOKEN": "ghp_xxx"}
-}
-}
+  "prompt": "审查并优化代码",
+  "agents": {
+    "code-reviewer": {
+      "description": "代码审查专家",
+      "prompt": "关注安全性和最佳实践",
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep"
+      ]
+    }
+  }
 }
 ```
 钩子（Hooks）： 支持 PreToolUse / PostToolUse 等生命周期钩子，可实现工具调用审计、敏感操作拦截等：
 ```
 {
-"hooks": {
-"PreToolUse": [
-{"matcher": "Write|Edit", "action": "deny", "reason": "禁止写入 .env 文件"}
-],
-"PostToolUse": [
-{"action": "webhook", "webhook_url": "https://audit.example.com/log"}
-]
-}
+  "prompt": "审查并优化代码",
+  "agents": {
+    "code-reviewer": {
+      "description": "代码审查专家",
+      "prompt": "关注安全性和最佳实践",
+      "tools": [
+        "Read",
+        "Glob",
+        "Grep"
+      ]
+    }
+  }
 }
 ```
 **4.6 踩坑记录**
@@ -514,14 +529,14 @@ Claude Code 的用户态文件主要分布在以下位置，全部需要纳入�
 ```
 -- 用户文件快照版本表
 CREATE TABLE user_snapshots (
-id BIGINT PRIMARY KEY AUTO_INCREMENT,
-user_id VARCHAR(64) NOT NULL,
-version INT NOT NULL,
-storage_key VARCHAR(256) NOT NULL, -- OSS 路径，如 snapshots/user_001/v3.tar.gz
-file_count INT, -- 文件数量
-total_size BIGINT, -- 快照总大小(bytes)
-created_at TIMESTAMP DEFAULT NOW(),
-INDEX idx_user_version (user_id, version DESC)
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id VARCHAR(64) NOT NULL,
+    version INT NOT NULL,
+    storage_key VARCHAR(256) NOT NULL,  -- OSS 路径，如 snapshots/user_001/v3.tar.gz
+    file_count INT,                     -- 文件数量
+    total_size BIGINT,                  -- 快照总大小(bytes)
+    created_at TIMESTAMP DEFAULT NOW(),
+    INDEX idx_user_version (user_id, version DESC)
 );
 ```
 **6.5 沙箱生命周期管理**
@@ -553,18 +568,19 @@ Control Plane 收到请求
 在应用层的调用代码可以非常简洁：
 ```
 import httpx
+
 async def query_claude(user_id: str, prompt: str) -> AsyncIterator[dict]:
-"""通过 Control Plane 路由到用户专属沙箱"""
-sandbox_url = await control_plane.get_or_create_sandbox(user_id)
-async with httpx.AsyncClient() as client:
-async with client.stream(
-"POST",
-f"{sandbox_url}/v1/query/stream",
-json={"prompt": prompt},
-) as response:
-async for line in response.aiter_lines():
-if line.startswith("data: "):
-yield json.loads(line[6:])
+    """通过 Control Plane 路由到用户专属沙箱"""
+    sandbox_url = await control_plane.get_or_create_sandbox(user_id)
+    async with httpx.AsyncClient() as client:
+        async with client.stream(
+            "POST",
+            f"{sandbox_url}/v1/query/stream",
+            json={"prompt": prompt},
+        ) as response:
+            async for line in response.aiter_lines():
+                if line.startswith("data: "):
+                    yield json.loads(line[6:])
 ```
 **6.7 方案优势**
 这套"一用户一沙箱 + 文件版本化"的组合设计带来了几个关键优势：
