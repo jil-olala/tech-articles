@@ -30,6 +30,7 @@
 ├── AI/Coding-Agent/
 │   ├── Claude-Code云端部署魔改SDK实现HTTP流式调用保姆级教程.md
 ├── AI/Vibe-Coding/
+│   ├── 研究生硬核教程-把AI用进真实项目.md
 │   ├── 为Agent重新设计云-Vibe-Coding平台背后的基础设施.md
 │   ├── 一文搞懂爆火的SKills原理及实践案例.md
 │   ├── Skills工单分析可复用Skill.md
@@ -82,6 +83,7 @@
 
 | 文章 | 来源 | 日期 |
 |------|------|------|
+| [一个研究生的硬核教程：把AI真正用进真实项目！](AI/Vibe-Coding/研究生硬核教程-把AI用进真实项目.md) | Datawhale | 2026-06-05 |
 | [为Agent重新设计云：Vibe Coding平台背后的基础设施](AI/Vibe-Coding/为Agent重新设计云-Vibe-Coding平台背后的基础设施.md) | 微信公众号（腾讯云开发者） | 2026-06-03 |
 | [一文搞懂爆火的SKills原理及实践案例](AI/Vibe-Coding/一文搞懂爆火的SKills原理及实践案例.md) | 腾讯云开发者 | 2026-03-13 |
 | [Skills 真的可以帮我干活了：把工单分析变成一个可复用的 Skill](AI/Vibe-Coding/Skills工单分析可复用Skill.md) | 微信公众号 | 2026-03-03 |
@@ -93,4 +95,4 @@
 | [基于钉钉机器人的 Qoder CLI / Claude Code 双引擎 AI 助手实践](AI/助手实践/基于钉钉机器人的_Qoder_CLI___Claude_Code_双引擎_AI_助手实践.md) | 微信公众号（阿里技术） | 2026-06-02 |
 
 ---
-共 **23** 篇文章
+共 **24** 篇文章
