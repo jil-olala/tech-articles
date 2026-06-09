@@ -6,7 +6,7 @@
 
 ```
 ~/articles/
-├── AI/Agent/ (13 篇)
+├── AI/Agent/ (14 篇)
 ├── AI/Agent/Hermes/ (3 篇)
 ├── AI/Agent/OpenClaw/ (4 篇)
 ├── AI/Coding-Agent/ (4 篇)
@@ -20,6 +20,7 @@
 
 | 文章 | 来源 | 日期 |
 |------|------|------|
+| [4000行代码撑起一个Agent框架？nanobot架构深度解析](AI/Agent/nanobot架构深度解析_4000行代码撑起Agent框架.md) | 微信公众号 | 2026-06-09 |
 | [重磅！Anthropic内部Skills经验公开了！](AI/Agent/Anthropic内部Skills经验公开.md) | Datawhale | 2026-06-07 |
 | [基于顶级 Agent（Claude Code）的 Harness 工程搭建式业务 Agent 评测方](AI/Agent/基于顶级_AgentClaude_Code的_Harness_工程搭建式业务_Agent_评测方案.md) | 阿里云开发者 | 2026-06-05 |
 | [AI研发自动化：Wiki知识库+技能包](AI/Agent/AI研发自动化-Wiki知识库加技能包.md) | 微信公众号（阿里云开发者） | 2026-06-04 |
@@ -76,4 +77,4 @@
 | [基于钉钉机器人的 Qoder CLI / Claude Code 双引擎 AI 助手实践](AI/助手实践/基于钉钉机器人的_Qoder_CLI___Claude_Code_双引擎_AI_助手实践.md) | 微信公众号（阿里技术） | 2026-06-02 |
 
 ---
-共 **29** 篇文章
+共 **30** 篇文章
