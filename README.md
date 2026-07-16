@@ -40,6 +40,7 @@ articles/
 | [深入浅出Harness Engineering之核心模式与理念](AI/Agent/深入浅出Harness_Engineering之核心模式与理念.md) | 腾讯云开发者 | 2026-04-29 |
 | [你不知道的 Agent：原理、架构与工程实践](AI/Agent/你不知道的Agent_原理架构与工程实践.md) | 阿里云开发者 | 2026-04-28 |
 | [用OpenClaw之前，看这篇优化设置指南（完整清单）](AI/Agent/OpenClaw优化设置指南.md) | Datawhale | 2026-03-15 |
+| [AutoResearch-LLM：让 Agent 接手 LLM 训练优化](AI/Agent/AutoResearch-LLM让_Agent_接手_LLM_训练优化.md) | - | - |
 | [大家都在讲 Harness，但它到底该怎么理解](AI/Agent/大家都讲Harness但它到底该怎么理解.md) | - | - |
 | [一文讲透如何构建Harness——六大组件全解析](AI/Agent/一文讲透如何构建Harness——六大组件全解析.md) | - | - |
 | [更可靠的主播助理：淘宝主播Agent的Harness工程实战](AI/Agent/更可靠的主播助理淘宝主播Agent的Harness工程实战.md) | - | - |
@@ -51,6 +52,8 @@ articles/
 | [认知重建之后，步入Agentic Engineering的工程革命](AI/Agent/认知重建之后，步入Agentic Engineering的工程革命.md) | - | - |
 | [帮大家啃完了 Simon Willison 的《Agentic Engineering Patterns》,全部 15 章精华都在这。](AI/Agent/帮大家啃完了 Simon Willison 的《Agentic Engineering Patterns》,全部 15 .md) | - | - |
 | [20年架构老兵的AI探索，让WorkBuddy帮你超越身边的人](AI/Agent/20年架构老兵的AI探索让WorkBuddy帮你超越身边的人.md) | - | - |
+| [数据研发Multi-Agent架构的Harness工程实践](AI/Agent/数据研发Multi-Agent架构的Harness工程实践.md) | - | - |
+| [AI 自我改进的关键，从模型转向 Harness了！](AI/Agent/AI_自我改进的关键从模型转向_Harness了.md) | - | - |
 | [Harness不是目的，知识才是护城河 —— 一个AI工程交付团队的知识沉淀实践](AI/Agent/Harness不是目的_知识才是护城河_AI工程交付团队的知识沉淀实践.md) | - | - |
 | [十年老技术开发的 AI Agent 探索之路](AI/Agent/十年老技术开发的-AI-Agent-探索之路.md) | - | - |
 | [2026 年 Agent 最重要的工程概念：「Harness Engineering」](AI/Agent/2026年Agent最重要的工程概念-Harness-Engineering.md) | - | - |
@@ -88,6 +91,7 @@ articles/
 | [一篇搞懂 AI Coding Agent 的 Token 成本控制](AI/Coding-Agent/一篇搞懂-AI-Coding-Agent-的-Token-成本控制.md) | - | - |
 | [1|工作流的 Skill 怎么写？从 7 个顶级 Skill 中提炼的模式与最佳实践](AI/Coding-Agent/工作流的_Skill_怎么写_从_7_个顶级_Skill_中提炼的模式与最佳实践.md) | - | - |
 | [逆向深扒Claude Code源码，我发现了什么！？](AI/Coding-Agent/逆向深扒Claude-Code源码我发现了什么.md) | - | - |
+| [如何将本地CodeBuddy/Cursor嵌入在线应用](AI/Coding-Agent/如何将本地CodeBuddyCursor嵌入在线应用.md) | - | - |
 | [如何写好 Skill：一份终极实战经验手册](AI/Coding-Agent/如何写好_Skill一份终极实战经验手册.md) | - | - |
 | [一个文件让 AI Coding 效率翻倍：AGENTS.md 实践指南](AI/Coding-Agent/一个文件让-AI-Coding-效率翻倍-AGENTS-md-实践指南.md) | - | - |
 | [横向拆解Claude Code、Codex等六大Agent上下文压缩策略后，我们做了第 7 个](AI/Coding-Agent/横向拆解Claude_CodeCodex等六大Agent上下文压缩策略后我们做了第_7_个.md) | - | - |
@@ -138,4 +142,4 @@ articles/
 
 ---
 
-共 **66** 篇文章
+共 **70** 篇文章
